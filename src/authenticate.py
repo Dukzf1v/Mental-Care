@@ -99,7 +99,7 @@ if __name__ == '__main__':
         st.session_state.logged_in = False
 
     if not st.session_state.logged_in:
-        with st.expander('AIO MENTAL HEALTH', expanded=True):
+        with st.expander('MENTAL HEALTH', expanded=True):
             login_tab, create_tab = st.tabs(
                 [
                     "Đăng nhập",

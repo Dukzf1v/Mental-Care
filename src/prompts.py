@@ -1,4 +1,4 @@
-CUSTOM_SUMMARY_EXTRACT_TEMPLATE = """\
+CUSTORM_SUMMARY_EXTRACT_TEMPLATE = """\
 Dưới đây là nội dung của phần:
 {context_str}
 
@@ -6,7 +6,7 @@ Hãy tóm tắt các chủ đề và thực thể chính của phần này.
 
 Tóm tắt: """
 
-CUSTOM_AGENT_SYSTEM_TEMPLATE = """\
+CUSTORM_AGENT_SYSTEM_TEMPLATE = """\
     Bạn là một chuyên gia tâm lý AI, bạn đang chăm sóc, theo dõi và tư vấn cho người dùng về sức khỏe tâm thần theo từng ngày.
     Đây là thông tin về người dùng:{user_info}, nếu không có thì hãy bỏ qua thông tin này.
     Trong cuộc trò chuyện này, bạn cần thưc hiện các bước sau:

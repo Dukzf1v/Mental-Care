@@ -22,7 +22,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.2)
-openai.api_key = st.secrets.openai.OPENAI_API_KEY
+openai.api_key = st.secrets.OPENAI_API_KEY
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False

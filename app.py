@@ -11,10 +11,8 @@ from src.authenticate import login, register, guest_login
 from src.conversation_engine import initialize_chatbot, chat_interface, load_chat_store
 from src.global_settings import SCORES_FILE
 
-# 🌟 Set Streamlit Page Configuration
 st.set_page_config(page_title="Mental Care AI", layout="wide")
 
-# 🌙 Dark Mode CSS
 st.markdown("""
     <style>
         body { background-color: #121212; color: white; }
@@ -23,18 +21,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ✅ Initialize OpenAI
 Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.2)
 openai.api_key = st.secrets.openai.OPENAI_API_KEY
 
-# 📌 User Authentication State
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
-# 🌟 Navigation Tabs
 tab1, tab2, tab3 = st.tabs(["🏠 Home", "💬 Chat", "📊 User Info"])
 
-# ================== 🏠 HOME PAGE ==================
 with tab1:
     st.header("🧠 Mental Care AI - Welcome!")
 
@@ -50,7 +44,6 @@ with tab1:
     else:
         st.success(f'Chào mừng {st.session_state.username}, hãy khám phá các tính năng của ứng dụng!', icon="🎉")
 
-# ================== 💬 CHAT PAGE ==================
 with tab2:
     if st.session_state.logged_in:
         st.header("💬 AI Mental Health Chatbot")
@@ -61,7 +54,6 @@ with tab2:
     else:
         st.warning("🔑 Vui lòng đăng nhập để sử dụng chatbot.")
 
-# ================== 📊 USER INFO PAGE ==================
 with tab3:
     if st.session_state.logged_in:
         st.header("📊 Theo dõi thông tin sức khỏe của bạn")
@@ -120,6 +112,5 @@ with tab3:
     else:
         st.warning("🔑 Vui lòng đăng nhập để xem thông tin sức khỏe.")
 
-# 🚀 Run App
 if __name__ == "__main__":
-    pass  # No need for extra navigation logic
+    pass  

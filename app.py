@@ -8,8 +8,8 @@ from datetime import datetime
 from llama_index.llms.openai import OpenAI
 from llama_index.core import Settings
 from src.authenticate import login, register, guest_login
-from src.conversation_engine import initialize_chatbot, chat_interface, load_chat_store
-from src.global_settings import SCORES_FILE
+from src.chat_bot import initialize_chatbot, chat_interface, load_chat_store
+from src.paths import SCORES_FILE
 
 st.set_page_config(page_title="Mental Care AI", layout="wide")
 

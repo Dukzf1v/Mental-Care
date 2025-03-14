@@ -2,7 +2,7 @@ import streamlit as st
 import yaml
 import hashlib
 import os
-from src.global_settings import USERS_FILE
+from src.paths import USERS_FILE
 
 def load_users():
     if os.path.exists(USERS_FILE) and os.path.getsize(USERS_FILE) > 0:

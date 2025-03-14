@@ -1,6 +1,6 @@
 from llama_index.core import VectorStoreIndex, load_index_from_storage
 from llama_index.core import StorageContext
-from src.global_settings import INDEX_STORAGE
+from src.paths import INDEX_STORAGE
 
 def build_indexes(nodes):
     try:

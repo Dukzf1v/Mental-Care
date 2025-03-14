@@ -9,7 +9,7 @@ from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.agent.openai import OpenAIAgent
 from llama_index.core.storage.chat_store import SimpleChatStore
 from llama_index.core.tools import FunctionTool
-from src.global_settings import INDEX_STORAGE, CONVERSATION_FILE, SCORES_FILE
+from src.paths import INDEX_STORAGE, CONVERSATION_FILE, SCORES_FILE
 from src.prompts import CUSTORM_AGENT_SYSTEM_TEMPLATE
 
 user_avatar = "data/images/user_avatar.jpg"

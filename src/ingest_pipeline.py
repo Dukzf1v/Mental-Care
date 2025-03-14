@@ -7,7 +7,7 @@ from llama_index.core import Settings
 from llama_index.llms.openai import OpenAI
 import openai
 import streamlit as st
-from src.global_settings import STORAGE_PATH, FILES_PATH, CACHE_FILE
+from src.paths import STORAGE_PATH, FILES_PATH, CACHE_FILE
 from src.prompts import CUSTORM_SUMMARY_EXTRACT_TEMPLATE
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]

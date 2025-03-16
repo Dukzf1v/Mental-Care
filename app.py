@@ -59,11 +59,19 @@ with tab3:
         st.header("📊 Theo dõi thông tin sức khỏe của bạn")
 
         def load_scores(file, specific_username):
+            
             if os.path.exists(file) and os.path.getsize(file) > 0:
-                with open(file, 'r') as f:
-                    data = json.load(f)
-                df = pd.DataFrame(data)
-                return df[df["username"] == specific_username]
+                try:
+                    with open(file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    df = pd.DataFrame(data)
+                    
+                    df["Time"] = pd.to_datetime(df["Time"], errors="coerce")
+                    
+                    return df[df["username"] == specific_username] if "username" in df else pd.DataFrame()
+                
+                except json.JSONDecodeError:
+                    return pd.DataFrame()
             else:
                 return pd.DataFrame(columns=["username", "Time", "Score", "Content", "Total guess"])
 

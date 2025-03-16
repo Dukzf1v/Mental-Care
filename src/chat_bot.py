@@ -36,25 +36,29 @@ def display_messages(chat_store, container, key):
                     st.markdown(message.content)
 def save_score(score, content, total_guess, username):
 
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        new_entry = {
-            "username": username,
-            "Time": current_time,
-            "Score": score,
-            "Content": content,
-            "Total guess": total_guess
-        }
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    new_entry = {
+        "username": username,
+        "Time": current_time,
+        "Score": score,
+        "Content": content if content else "Không có mô tả",
+        "Total guess": total_guess if total_guess else "Không có dữ liệu"
+    }
+
+    if os.path.exists(SCORES_FILE) and os.path.getsize(SCORES_FILE) > 0:
         try:
-            with open(SCORES_FILE, "r") as f:
+            with open(SCORES_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-        except FileNotFoundError:
+        except json.JSONDecodeError:
             data = []
+    else:
+        data = []
 
-        data.append(new_entry)
+    data.append(new_entry)
 
-        with open(SCORES_FILE, "w") as f:
-            json.dump(data, f, indent=4)
+    with open(SCORES_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
     
 def initialize_chatbot(chat_store, container, username, user_info):
     memory = ChatMemoryBuffer.from_defaults(
@@ -95,7 +99,7 @@ def chat_interface(agent, chat_store, container):
         with container:
             with st.chat_message(name="assistant", avatar=professor_avatar):
                 st.markdown("Chào bạn, mình sẽ giúp bạn chăm sóc sức khỏe tinh thần. Hãy nói chuyện với mình để bắt đầu.")
-    prompt = st.chat_input("Viết tin nhắn tại đây ạ...")
+    prompt = st.chat_input("Viết tin nhắn tại đây")
     if prompt:
         with container:
             with st.chat_message(name="user", avatar=user_avatar):

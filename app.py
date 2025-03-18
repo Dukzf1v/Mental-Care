@@ -1,15 +1,14 @@
 import streamlit as st
 import openai
 import json
-import os
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
+from src.firebase_config import db
 from llama_index.llms.openai import OpenAI
 from llama_index.core import Settings
 from src.authenticate import login, register, guest_login
-from src.chat_bot import initialize_chatbot, chat_interface, load_chat_store
-from src.paths import SCORES_FILE
+from src.chat_bot import initialize_chatbot, chat_interface
 
 st.set_page_config(page_title="Mental Care AI", layout="wide")
 
@@ -17,7 +16,7 @@ st.markdown("""
     <style>
         body { background-color: #121212; color: white; }
         .stButton button { background-color: #1DB954; color: white; border-radius: 10px; }
-        .st-tabs [role="tablist"] { justify-content: center; } /* Center tabs */
+        .st-tabs [role="tablist"] { justify-content: center; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -47,10 +46,12 @@ with tab1:
 with tab2:
     if st.session_state.logged_in:
         st.header("💬 AI Mental Health Chatbot")
-        chat_store = load_chat_store()
         container = st.container()
-        agent = initialize_chatbot(chat_store, container, st.session_state.username, st.session_state.user_info)
-        chat_interface(agent, chat_store, container)
+        if "user_info" not in st.session_state or not st.session_state.user_info:
+            st.session_state.user_info = "No user info available" 
+        session_id = f"chat_{st.session_state.username}"
+        agent = initialize_chatbot(session_id, container, st.session_state.username, st.session_state.user_info)
+        chat_interface(agent, session_id, container)
     else:
         st.warning("🔑 Vui lòng đăng nhập để sử dụng chatbot.")
 
@@ -58,67 +59,76 @@ with tab3:
     if st.session_state.logged_in:
         st.header("📊 Theo dõi thông tin sức khỏe của bạn")
 
-        def load_scores(file, specific_username):
+        def save_score_in_subcollection(username, score, content, total_guess):
+            """Save score in the user's subcollection of scores."""
+            user_ref = db.collection("user_scores").document(username)
             
-            if os.path.exists(file) and os.path.getsize(file) > 0:
-                try:
-                    with open(file, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                    df = pd.DataFrame(data)
-                    
-                    df["Time"] = pd.to_datetime(df["Time"], errors="coerce")
-                    
-                    return df[df["username"] == specific_username] if "username" in df else pd.DataFrame()
-                
-                except json.JSONDecodeError:
-                    return pd.DataFrame()
-            else:
-                return pd.DataFrame(columns=["username", "Time", "Score", "Content", "Total guess"])
+            # Save score as a new document in the score_history subcollection
+            user_ref.collection("score_history").add({
+                "score": score,
+                "time": datetime.now(timezone.utc),  # Timestamp in UTC
+                "content": content if content else "Không có mô tả",
+                "total_guess": total_guess if total_guess else "Không có dữ liệu"
+            })
+
+        def load_scores_from_firebase(username):
+            """Retrieve user scores from Firestore."""
+            scores_ref = db.collection("user_scores").document(username).collection("score_history")
+            docs = scores_ref.stream()
+            data = [doc.to_dict() for doc in docs]
+            return pd.DataFrame(data) if data else pd.DataFrame(columns=["score", "time", "content", "total_guess"])
 
         def score_to_numeric(score):
+            """Convert textual scores to numeric for visualization."""
             return {"kém": 1, "trung bình": 2, "khá": 3, "tốt": 4}.get(score.lower(), 0)
 
         def plot_scores(df):
-            df['Time'] = pd.to_datetime(df['Time'])
-            df['Score_num'] = df['Score'].apply(score_to_numeric)
+            """Plot user's mental health scores over time."""
+            df['time'] = pd.to_datetime(df['time'])
+            df['score_num'] = df['score'].apply(score_to_numeric)
 
             color_map = {'kém': 'red', 'trung bình': 'orange', 'khá': 'yellow', 'tốt': 'green'}
-            df['color'] = df['Score'].map(color_map)
+            df['color'] = df['score'].map(color_map)
 
             fig = go.Figure()
-            fig.add_trace(go.Scatter(x=df['Time'], y=df['Score_num'], mode='lines+markers',
-                                     marker=dict(size=24, color=df['color']), text=df['Score'], line=dict(width=2)))
+            fig.add_trace(go.Scatter(x=df['time'], y=df['score_num'], mode='lines+markers',
+                                    marker=dict(size=24, color=df['color']), text=df['score'], line=dict(width=2)))
             fig.update_layout(xaxis_title='Ngày', yaxis_title='Score',
-                              yaxis=dict(tickvals=[1, 2, 3, 4], ticktext=['kém', 'trung bình', 'khá', 'tốt']),
-                              hovermode='x unified')
+                            yaxis=dict(tickvals=[1, 2, 3, 4], ticktext=['kém', 'trung bình', 'khá', 'tốt']),
+                            hovermode='x unified')
 
             st.plotly_chart(fig)
 
-        df = load_scores(SCORES_FILE, st.session_state.username)
+        # Load user scores from Firebase
+        df = load_scores_from_firebase(st.session_state.username)
+
         if not df.empty:
-            st.markdown("## 📊 Biểu đồ sức khỏe tinh thần 7 ngày qua của bạn")
+            st.markdown("## 📊 Biểu đồ sức khỏe tinh thần của bạn")
             plot_scores(df)
 
-        st.markdown("## 📆 Truy xuất thông tin sức khỏe theo ngày")
-        selected_date = st.date_input("📅 Chọn ngày", datetime.now().date())
-        selected_date = pd.to_datetime(selected_date)
+            st.markdown("## 📆 Truy xuất thông tin sức khỏe theo ngày")
+            selected_date = st.date_input("📅 Chọn ngày", datetime.now().date())
+            selected_date = pd.to_datetime(selected_date)
 
-        if not df.empty:
-            filtered_df = df[df["Time"].dt.date == selected_date.date()]
-            if not filtered_df.empty:
-                st.write(f"📅 **Thông tin ngày {selected_date.date()}**")
-                for _, row in filtered_df.iterrows():
-                    st.markdown(f"**🕒 Thời gian:** {row['Time']}  \n"
-                                f"**📈 Điểm:** {row['Score']}  \n"
-                                f"**📜 Nội dung:** {row['Content']}  \n"
-                                f"**📊 Tổng dự đoán:** {row['Total guess']}  \n")
-            else:
-                st.write(f"❌ Không có dữ liệu cho ngày {selected_date.date()}")
+            if not df.empty:
+                filtered_df = df[df["time"].dt.date == selected_date.date()]
+                if not filtered_df.empty:
+                    st.write(f"📅 **Thông tin ngày {selected_date.date()}**")
+                    for _, row in filtered_df.iterrows():
+                        st.markdown(f"**🕒 Thời gian:** {row['time']}  \n"
+                                    f"**📈 Điểm:** {row['score']}  \n"
+                                    f"**📜 Nội dung:** {row['content']}  \n"
+                                    f"**📊 Tổng dự đoán:** {row['total_guess']}  \n")
+                else:
+                    st.write(f"❌ Không có dữ liệu cho ngày {selected_date.date()}")
 
-        st.markdown("## 📋 Bảng dữ liệu chi tiết")
-        st.table(df)
+            st.markdown("## 📋 Bảng dữ liệu chi tiết")
+            st.table(df)
+        else:
+            st.warning("❌ Không có dữ liệu để hiển thị.")
     else:
         st.warning("🔑 Vui lòng đăng nhập để xem thông tin sức khỏe.")
+
 
 if __name__ == "__main__":
     pass  

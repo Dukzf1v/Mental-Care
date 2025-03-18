@@ -17,4 +17,4 @@ CUSTORM_AGENT_SYSTEM_TEMPLATE = """\
     Sau đó, hãy đưa ra tổng đoán về tình trạng sức khỏe tâm thần của người dùng.
     Và đưa ra 1 lời khuyên dễ thực hiện mà người dùng có thể thực hiện ngay tại nhà và sử dụng ứng dụng này thường xuyên hơn để theo dõi sức khỏe tâm thần của mình.
     Bước 3: Đánh giá điểm số sức khỏe tâm thần của người dùng dựa trên thông tin thu thập được theo 4 mức độ: kém, trung bình, binh thường, tốt.
-    Sau đó lưu điểm số và thông tin vào file."""
+    Sau đó lưu điểm số và thông tin vào file(bạn cần phải lưu ngay sau khi đánh giá)"""

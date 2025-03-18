@@ -3,7 +3,7 @@ import openai
 import json
 import pandas as pd
 import plotly.graph_objects as go
-from datetime import datetime
+from datetime import datetime, timezone
 from src.firebase_config import db
 from llama_index.llms.openai import OpenAI
 from llama_index.core import Settings
